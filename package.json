@@ -1,0 +1,16 @@
+{
+  "name": "esp32cam-gemini-waste-server",
+  "version": "1.0.0",
+  "description": "ESP32-CAM image classifier using Gemini AI (biodegradable / non-biodegradable / hazardous)",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5",
+    "@google/genai": "^0.1.0",
+    "dotenv": "^16.4.0"
+  }
+}
