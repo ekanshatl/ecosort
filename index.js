@@ -1,12 +1,15 @@
 import express from "express";
+import multer from "multer";
 import dotenv from "dotenv";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
 const app = express();
+const upload = multer({ storage: multer.memoryStorage() });
+
 const PORT = process.env.PORT || 3000;
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
@@ -14,7 +17,8 @@ if (!GEMINI_API_KEY) {
   process.exit(1);
 }
 
-const client = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: MODEL });
 
 function buildPrompt() {
   return `Return ONLY a single JSON object:
@@ -27,44 +31,40 @@ Classify the main item in the image as biodegradable, non_biodegradable, or haza
 }
 
 app.get("/", (req, res) => {
-  res.send("🌿 ESP32-CAM EcoSort Analyzer is live!");
+  res.send("🌱 EcoSort Render Server — ESP32-CAM Analyzer is live!");
 });
 
-// ✅ New raw-body version for ESP32 uploads
-app.post("/analyze", express.raw({ type: "image/*", limit: "10mb" }), async (req, res) => {
+app.post("/analyze", upload.single("image"), async (req, res) => {
   try {
-    if (!req.body || !req.body.length)
+    if (!req.file || !req.file.buffer)
       return res.status(400).json({ error: "no image data" });
 
-    const base64 = req.body.toString("base64");
-    const mime = req.headers["content-type"] || "image/jpeg";
+    const mime = req.file.mimetype || "image/jpeg";
+    const base64 = req.file.buffer.toString("base64");
 
-    console.log(`📸 Received ${req.body.length} bytes from ESP32`);
+    console.log(`🖼️ Received ${req.file.size} bytes (${mime})`);
 
-    const response = await client.models.generateContent({
-      model: MODEL,
-      contents: [
-        { inlineData: { mimeType: mime, data: base64 } },
-        { text: buildPrompt() },
-      ],
-    });
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          mimeType: mime,
+          data: base64,
+        },
+      },
+      { text: buildPrompt() },
+    ]);
 
-    const raw = response.text ?? response.outputText ?? "";
-    let result;
+    const text = result.response.text();
+    console.log("🧠 Gemini raw:", text);
 
-    try {
-      result = JSON.parse(raw);
-    } catch {
-      const m = raw.match(/\{[\s\S]*\}/);
-      if (m) result = JSON.parse(m[0]);
-      else throw new Error("Invalid JSON from model");
-    }
+    const match = text.match(/\{[\s\S]*\}/);
+    const json = match ? JSON.parse(match[0]) : { label: "unknown", confidence: 0, notes: "parse failed" };
 
-    res.json({ ok: true, result });
+    res.json({ ok: true, result: json });
   } catch (err) {
-    console.error("🔥 SERVER ERROR:", err);
+    console.error("💥 Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server live on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
