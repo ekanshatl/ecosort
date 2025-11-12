@@ -1,13 +1,10 @@
 import express from "express";
-import multer from "multer";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
 
 dotenv.config();
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
-
 const PORT = process.env.PORT || 3000;
 const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -30,15 +27,19 @@ Classify the main item in the image as biodegradable, non_biodegradable, or haza
 }
 
 app.get("/", (req, res) => {
-  res.send("ESP32-CAM Gemini Waste Analyzer 🌍");
+  res.send("🌿 ESP32-CAM EcoSort Analyzer is live!");
 });
 
-app.post("/analyze", upload.single("image"), async (req, res) => {
+// ✅ New raw-body version for ESP32 uploads
+app.post("/analyze", express.raw({ type: "image/*", limit: "10mb" }), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ error: "no image uploaded" });
+    if (!req.body || !req.body.length)
+      return res.status(400).json({ error: "no image data" });
 
-    const base64 = req.file.buffer.toString("base64");
-    const mime = req.file.mimetype || "image/jpeg";
+    const base64 = req.body.toString("base64");
+    const mime = req.headers["content-type"] || "image/jpeg";
+
+    console.log(`📸 Received ${req.body.length} bytes from ESP32`);
 
     const response = await client.models.generateContent({
       model: MODEL,
@@ -61,9 +62,9 @@ app.post("/analyze", upload.single("image"), async (req, res) => {
 
     res.json({ ok: true, result });
   } catch (err) {
-    console.error(err);
+    console.error("🔥 SERVER ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server up on ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server live on port ${PORT}`));
