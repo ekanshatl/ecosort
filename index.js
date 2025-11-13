@@ -24,11 +24,14 @@ function buildPrompt() {
 {
   "class": "<biodegradable|non_biodegradable|hazardous>"
 }
-Classify the main item in the image as biodegradable, non_biodegradable, or hazardous.`;
+  Classify the main item in the image as biodegradable, non_biodegradable, or hazardous.`;
+  All electronic items are hazardous
+  If the confidence is less than 90%, respond with again
+  If the image shows a phone or any technological device, use class: "hazardous".
 }
 
 app.get("/", (req, res) => {
-  res.send("🌱 EcoSort Render Server — ESP32-CAM Analyzer is live!");
+  res.send("Ecosort is ON");
 });
 
 app.post("/analyze", async (req, res) => {
