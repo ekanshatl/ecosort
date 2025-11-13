@@ -23,13 +23,13 @@ const model = genAI.getGenerativeModel({ model: MODEL });
 function buildPrompt() {
   return `Return ONLY a single JSON object:
 {
-"class": "biodegradable|non-biodegradable|hazardous"
+  "class": "<biodegradable|non_biodegradable|hazardous>",
 }
 Classify the main item in the image as biodegradable, non_biodegradable, or hazardous.`;
 }
 
 app.get("/", (req, res) => {
-  res.send("Ecosort is working");
+  res.send("🌱 EcoSort Render Server — ESP32-CAM Analyzer is live!");
 });
 
 app.post("/analyze", upload.single("image"), async (req, res) => {
