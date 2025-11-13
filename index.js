@@ -29,7 +29,7 @@ Classify the main item in the image as biodegradable, non_biodegradable, or haza
 }
 
 app.get("/", (req, res) => {
-  res.send("🌱 EcoSort Render Server — ESP32-CAM Analyzer is live!");
+  res.send("Ecosort is working");
 });
 
 app.post("/analyze", upload.single("image"), async (req, res) => {
