@@ -6,7 +6,8 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite-preview-09-2025";
+const MODEL =
+  process.env.GEMINI_MODEL || "gemini-2.5-flash-lite-preview-09-2025";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
@@ -15,44 +16,28 @@ if (!GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-let model = genAI.getGenerativeModel({ model: MODEL });
+const model = genAI.getGenerativeModel({ model: MODEL });
 
-// handle raw jpeg uploads
+// middleware for raw image data
 app.use(express.raw({ type: "image/jpeg", limit: "10mb" }));
 
 function buildPrompt() {
-  return `Return ONLY a single JSON object:
+  return `
+Return ONLY a single JSON object:
 {
   "class": "<biodegradable|non_biodegradable|hazardous>"
 }
-Rules:
-- Classify the main visible object in the photo.
-- All electronic items are "hazardous".
-- If confidence < 90%, respond with "again".
-- If the image shows a phone, computer, or any tech device, use class: "hazardous".`;
-}
 
-// retry logic for 429 or temporary errors
-async function safeGenerate(model, input, retries = 3) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await model.generateContent(input);
-    } catch (err) {
-      if (err.message.includes("429") && i < retries - 1) {
-        console.warn(`⚠️ Gemini rate limited — retrying (${i + 1}/${retries})`);
-        await new Promise((r) => setTimeout(r, 8000));
-      } else if (err.message.includes("invalid model") && MODEL !== "gemini-2.0-flash-lite") {
-        console.warn("⚙️ Falling back to gemini-2.0-flash-lite...");
-        model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
-      } else {
-        throw err;
-      }
-    }
-  }
+Rules:
+- Classify the main item in the image as biodegradable, non_biodegradable, or hazardous.
+- All electronic items are hazardous.
+- If the confidence is less than 90%, respond with "again".
+- If the image shows a phone or any technological device as the main subject, use "hazardous".
+`;
 }
 
 app.get("/", (req, res) => {
-  res.send("Ecosort is ON");
+  res.send("🌱 Ecosort is ON and ready!");
 });
 
 app.post("/analyze", async (req, res) => {
@@ -60,11 +45,10 @@ app.post("/analyze", async (req, res) => {
     if (!req.body || !req.body.length)
       return res.status(400).json({ error: "no image data" });
 
-    console.log(`🖼️ Received ${req.body.length} bytes from ESP`);
-
     const base64 = req.body.toString("base64");
+    console.log(`🖼️ Received ${req.body.length} bytes`);
 
-    const result = await safeGenerate(model, [
+    const result = await model.generateContent([
       { inlineData: { mimeType: "image/jpeg", data: base64 } },
       { text: buildPrompt() },
     ]);
@@ -82,4 +66,4 @@ app.post("/analyze", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
