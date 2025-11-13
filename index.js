@@ -23,9 +23,7 @@ const model = genAI.getGenerativeModel({ model: MODEL });
 function buildPrompt() {
   return `Return ONLY a single JSON object:
 {
-  "label": "<biodegradable|non_biodegradable|hazardous>",
-  "confidence": <float 0.0-1.0>,
-  "notes": "<short reason>"
+"class": "biodegradable|non-biodegradable|hazardous"
 }
 Classify the main item in the image as biodegradable, non_biodegradable, or hazardous.`;
 }
