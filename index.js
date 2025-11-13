@@ -15,8 +15,9 @@ if (!GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: MODEL });
+let model = genAI.getGenerativeModel({ model: MODEL });
 
+// handle raw jpeg uploads
 app.use(express.raw({ type: "image/jpeg", limit: "10mb" }));
 
 function buildPrompt() {
@@ -24,10 +25,30 @@ function buildPrompt() {
 {
   "class": "<biodegradable|non_biodegradable|hazardous>"
 }
-  Classify the main item in the image as biodegradable, non_biodegradable, or hazardous.;
-  All electronic items are hazardous
-  If the confidence is less than 90%, respond with again
-  If the image shows a phone or any technological device as the primary part of the image, use class: "hazardous".`
+Rules:
+- Classify the main visible object in the photo.
+- All electronic items are "hazardous".
+- If confidence < 90%, respond with "again".
+- If the image shows a phone, computer, or any tech device, use class: "hazardous".`;
+}
+
+// retry logic for 429 or temporary errors
+async function safeGenerate(model, input, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await model.generateContent(input);
+    } catch (err) {
+      if (err.message.includes("429") && i < retries - 1) {
+        console.warn(`⚠️ Gemini rate limited — retrying (${i + 1}/${retries})`);
+        await new Promise((r) => setTimeout(r, 8000));
+      } else if (err.message.includes("invalid model") && MODEL !== "gemini-2.0-flash-lite") {
+        console.warn("⚙️ Falling back to gemini-2.0-flash-lite...");
+        model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+      } else {
+        throw err;
+      }
+    }
+  }
 }
 
 app.get("/", (req, res) => {
@@ -39,10 +60,11 @@ app.post("/analyze", async (req, res) => {
     if (!req.body || !req.body.length)
       return res.status(400).json({ error: "no image data" });
 
-    const base64 = req.body.toString("base64");
-    console.log(`🖼️ Received ${req.body.length} bytes`);
+    console.log(`🖼️ Received ${req.body.length} bytes from ESP`);
 
-    const result = await model.generateContent([
+    const base64 = req.body.toString("base64");
+
+    const result = await safeGenerate(model, [
       { inlineData: { mimeType: "image/jpeg", data: base64 } },
       { text: buildPrompt() },
     ]);
@@ -60,4 +82,4 @@ app.post("/analyze", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
