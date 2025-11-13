@@ -1,13 +1,10 @@
 import express from "express";
-import multer from "multer";
 import dotenv from "dotenv";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
-
 const PORT = process.env.PORT || 3000;
 const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite-preview-09-2025";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -20,10 +17,12 @@ if (!GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: MODEL });
 
+app.use(express.raw({ type: "image/jpeg", limit: "10mb" }));
+
 function buildPrompt() {
   return `Return ONLY a single JSON object:
 {
-  "class": "<biodegradable|non_biodegradable|hazardous>",
+  "class": "<biodegradable|non_biodegradable|hazardous>"
 }
 Classify the main item in the image as biodegradable, non_biodegradable, or hazardous.`;
 }
@@ -32,23 +31,16 @@ app.get("/", (req, res) => {
   res.send("🌱 EcoSort Render Server — ESP32-CAM Analyzer is live!");
 });
 
-app.post("/analyze", upload.single("image"), async (req, res) => {
+app.post("/analyze", async (req, res) => {
   try {
-    if (!req.file || !req.file.buffer)
+    if (!req.body || !req.body.length)
       return res.status(400).json({ error: "no image data" });
 
-    const mime = req.file.mimetype || "image/jpeg";
-    const base64 = req.file.buffer.toString("base64");
-
-    console.log(`🖼️ Received ${req.file.size} bytes (${mime})`);
+    const base64 = req.body.toString("base64");
+    console.log(`🖼️ Received ${req.body.length} bytes`);
 
     const result = await model.generateContent([
-      {
-        inlineData: {
-          mimeType: mime,
-          data: base64,
-        },
-      },
+      { inlineData: { mimeType: "image/jpeg", data: base64 } },
       { text: buildPrompt() },
     ]);
 
@@ -56,7 +48,7 @@ app.post("/analyze", upload.single("image"), async (req, res) => {
     console.log("🧠 Gemini raw:", text);
 
     const match = text.match(/\{[\s\S]*\}/);
-    const json = match ? JSON.parse(match[0]) : { label: "unknown", confidence: 0, notes: "parse failed" };
+    const json = match ? JSON.parse(match[0]) : { class: "unknown" };
 
     res.json({ ok: true, result: json });
   } catch (err) {
