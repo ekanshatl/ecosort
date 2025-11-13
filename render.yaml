@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: ecosort
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    autoDeploy: true
+    envVars:
+      NODE_ENV: production
+    healthCheckPath: /
+    # 🧹 restart once every 6h to avoid memory leaks
+    cron:
+      - name: reboot
+        schedule: "0 */6 * * *"
+        command: "pkill node || true"
