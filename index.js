@@ -29,28 +29,25 @@ Return ONLY a single JSON object:
   "class": "<biodegradable|non_biodegradable|hazardous>"
 }
 
-You MUST return ONLY a single JSON object. No explanations. No extra text.
+You are classifying TRASH ITEMS only.
+
+Look at the image and return JSON exactly like THIS: 
 
 {
   "class": "<biodegradable|non_biodegradable|hazardous>"
 }
 
-CLASSIFICATION RULES:
-- Identify only the MAIN object in the image.
-- If the image is blurry, unclear, too dark, or the object cannot be confidently identified → respond with:
-  { "class": "again" }
-- If the image's primary image is a human, respond with biodegradable.
-- If your confidence is below 90% → respond with:
-  { "class": "again" }
-- If the object is an electronic device or anything technological (phones, earbuds, remotes, chargers, cables, PC parts, batteries) → class = "hazardous".
-- Hazardous examples:
-  batteries, chemicals, sharp items, electronics, metal cans with food residue, broken glass.
-- Biodegradable examples:
-  fruits, vegetables, leaves, paper, cardboard, food waste.
-- Non-biodegradable examples:
-  plastic, metal objects, glass bottles, wrappers, packaging, styrofoam.
-FINAL REQUIREMENT:
-→ Output only the JSON object. No markdown. No backticks. No text outside the JSON.
+Rules:
+- Phones, batteries, wires, chargers → "hazardous"
+- Food, fruit, leaves, paper → "biodegradable"
+- Plastic, metal cans, bottles → "non_biodegradable"
+- If the item is unclear or too blurry, return:
+  {
+    "class": "unknown"
+  }
+
+NO extra text. NO explanation.
+
 `;
 }
 
