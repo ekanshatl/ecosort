@@ -41,13 +41,8 @@ Rules:
 - Phones, batteries, wires, chargers → "hazardous"
 - Food, fruit, leaves, paper → "biodegradable"
 - Plastic, metal cans, bottles → "non_biodegradable"
-- If the item is unclear or too blurry, return:
-  {
-    "class": "unknown"
-  }
-
+- If the item is unclear or too blurry, try your best.
 NO extra text. NO explanation.
-
 `;
 }
 
