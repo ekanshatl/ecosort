@@ -23,16 +23,34 @@ app.use(express.raw({ type: "image/jpeg", limit: "10mb" }));
 
 function buildPrompt() {
   return `
+You are a waste classifier AI.
 Return ONLY a single JSON object:
 {
   "class": "<biodegradable|non_biodegradable|hazardous>"
 }
 
-Rules:
-- Classify the main item in the image as biodegradable, non_biodegradable, or hazardous.
-- All electronic items are hazardous.
-- If the confidence is less than 90%, respond with "again".
-- If the image shows a phone or any technological device as the main subject, use "hazardous".
+You MUST return ONLY a single JSON object. No explanations. No extra text.
+
+{
+  "class": "<biodegradable|non_biodegradable|hazardous>"
+}
+
+CLASSIFICATION RULES:
+- Identify only the MAIN object in the image.
+- If the image is blurry, unclear, too dark, or the object cannot be confidently identified → respond with:
+  { "class": "again" }
+- If the image's primary image is a human, respond with biodegradable.
+- If your confidence is below 90% → respond with:
+  { "class": "again" }
+- If the object is an electronic device or anything technological (phones, earbuds, remotes, chargers, cables, PC parts, batteries) → class = "hazardous".
+- Hazardous examples:
+  batteries, chemicals, sharp items, electronics, metal cans with food residue, broken glass.
+- Biodegradable examples:
+  fruits, vegetables, leaves, paper, cardboard, food waste.
+- Non-biodegradable examples:
+  plastic, metal objects, glass bottles, wrappers, packaging, styrofoam.
+FINAL REQUIREMENT:
+→ Output only the JSON object. No markdown. No backticks. No text outside the JSON.
 `;
 }
 
