@@ -29,7 +29,7 @@ Return ONLY a single JSON object:
   "class": "<biodegradable|non_biodegradable|hazardous>"
 }
 
-You are classifying TRASH ITEMS only.
+You are classifying TRASH ITEMS.
 
 Look at the image and return JSON exactly like THIS: 
 
@@ -38,10 +38,9 @@ Look at the image and return JSON exactly like THIS:
 }
 
 Rules:
-- Phones, batteries, wires, chargers → "hazardous"
-- Food, fruit, leaves, paper → "biodegradable"
-- Plastic, metal cans, bottles → "non_biodegradable"
-- If the item is unclear or too blurry, try your best.
+- EXAMPLES: Phones, batteries, wires, chargers,cells → "hazardous"
+- EXAMPLES: Food, fruit, leaves, paper → "biodegradable"
+- EXAMPLES: Plastic, metal cans, bottles → "non_biodegradable"
 NO extra text. NO explanation.
 `;
 }
