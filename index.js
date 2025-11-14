@@ -24,24 +24,12 @@ app.use(express.raw({ type: "image/jpeg", limit: "10mb" }));
 function buildPrompt() {
   return `
 You are a waste classifier AI.
-Return ONLY a single JSON object:
-{
-  "class": "<biodegradable|non_biodegradable|hazardous>"
-}
+Return ONLY this JSON:
+{"class":"<biodegradable|non_biodegradable|hazardous>"}
 
-You are classifying TRASH ITEMS.
-
-Look at the image and return JSON exactly like THIS: 
-
-{
-  "class": "<biodegradable|non_biodegradable|hazardous>"
-}
-
-Rules:
-- EXAMPLES: Phones, batteries, wires, chargers,cells → "hazardous"
-- EXAMPLES: Food, fruit, leaves, paper → "biodegradable"
-- EXAMPLES: Plastic, metal cans, bottles → "non_biodegradable"
-NO extra text. NO explanation.
+biodegradable = natural materials.
+non_biodegradable = plastic, glass, metal.
+hazardous = batteries, electronics, chemicals.
 `;
 }
 
