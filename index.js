@@ -7,7 +7,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MODEL =
-  process.env.GEMINI_MODEL || "gemini-2.5-flash-lite-preview-09-2025";
+  process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
@@ -24,8 +24,8 @@ app.use(express.raw({ type: "image/jpeg", limit: "10mb" }));
 function buildPrompt() {
   return `
 You are a waste classifier AI.
-Return ONLY this JSON:
-{"class":"<biodegradable|non_biodegradable|hazardous>"}
+Return ONLY JSON like this:
+{"class":"<biodegradable>, "object":"human"}
 
 biodegradable = natural materials.
 non_biodegradable = plastic, glass, metal.
