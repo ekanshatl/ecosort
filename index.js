@@ -24,7 +24,7 @@ app.use(express.raw({ type: "image/jpeg", limit: "10mb" }));
 function buildPrompt() {
   return `
 You are a waste classifier AI.
-You have to segregate the object into 3 categories - Biodegradable|Non Biodegradable|Hazardous
+You have to segregate the object into 3 categories - biodegradable|non_biodegradable|hazardous
 Return ONLY JSON like this:
 {"class":"<biodegradable>, "object":"human"}
 
