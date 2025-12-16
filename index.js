@@ -30,7 +30,7 @@ Return ONLY JSON like this:
 
 biodegradable = natural materials.
 non_biodegradable = plastic, glass, metal.
-hazardous = batteries, electronics, chemicals,cells.
+hazardous = ALL ELECTRONICS including mobile phones, batteries, cells, etc.
 `;
 }
 
