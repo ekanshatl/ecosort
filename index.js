@@ -26,11 +26,14 @@ function buildPrompt() {
 You are a waste classifier AI.
 You have to segregate the object into 3 categories - biodegradable|non_biodegradable|hazardous
 Return ONLY JSON like this:
-{"class":"<biodegradable>, "object":"human"}
+{"class":"<biodegradable>, "object":"leaf"}
 
 biodegradable = natural materials.
 non_biodegradable = plastic, glass, metal.
 hazardous = ALL ELECTRONICS including mobile phones, batteries, cells, etc.
+
+If you see a human holding an item, dont classify the human, classify the item he is holding.
+Be accurate
 `;
 }
 
