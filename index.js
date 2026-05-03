@@ -40,14 +40,10 @@ Use real waste segregation datasets to give accurate answers.
 
 IMPORTANT:
 - DO NOT guess random objects like "mobile phone"
-- If unsure → return unknown
 
 Return ONLY JSON:
 {"class":"biodegradable","object":"leaf", "confidence":"0.98"}
-OR
-{"class":"unknown","object":"unknown"} 
 
-Give JSON unknown ONLY if your confidence is below 0.9,
 `;
 }
 
