@@ -23,19 +23,27 @@ app.use(express.raw({ type: "image/jpeg", limit: "10mb" }));
 
 function buildPrompt() {
   return `
-You are a waste classifier AI.
-You have to segregate the object into 3 categories - biodegradable|non_biodegradable|hazardous
-Return ONLY JSON like this:
-{"class":"<biodegradable>, "object":"leaf"}
+You are a STRICT waste classification system.
 
-biodegradable = natural materials.
-non_biodegradable = plastic, glass, metal.
-hazardous = ALL ELECTRONICS including mobile phones, batteries, cells, etc.
+You MUST classify the object into ONLY ONE of these:
+- biodegradable
+- non_biodegradable
+- hazardous
 
-Be accurate
+DO NOT guess common objects like "mobile phone" unless it is VERY CLEAR.
+
+Rules:
+- biodegradable = food, paper, leaves, organic
+- non_biodegradable = plastic, glass, metal
+- hazardous = electronics, batteries, wires
+
+If unsure → return:
+{"class":"unknown","object":"unknown"}
+
+Return ONLY valid JSON:
+{"class":"<category>","object":"<object_name>"}
 `;
 }
-
 app.get("/", (req, res) => {
   res.send("🌱 Ecosort is ON and ready!");
 });
