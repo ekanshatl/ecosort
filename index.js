@@ -32,18 +32,22 @@ Classify the object into ONLY ONE:
 - hazardous
 
 Rules:
-- biodegradable = food, paper, leaves, organic
-- non_biodegradable = plastic, glass, metal
-- hazardous = electronics, batteries, wires
+- biodegradable = food, paper, leaves, organic, etc
+- non_biodegradable = plastic, glass, metal, etc
+- hazardous = electronics, batteries, wires, etc
+
+Use real waste segregation datasets to give accurate answers.
 
 IMPORTANT:
 - DO NOT guess random objects like "mobile phone"
 - If unsure → return unknown
 
 Return ONLY JSON:
-{"class":"biodegradable","object":"leaf"}
+{"class":"biodegradable","object":"leaf", "confidence":"0.98"}
 OR
-{"class":"unknown","object":"unknown"}
+{"class":"unknown","object":"unknown"} 
+
+Give JSON unknown ONLY if your confidence is below 0.9,
 `;
 }
 
