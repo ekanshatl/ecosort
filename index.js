@@ -30,7 +30,7 @@ You MUST classify the object into ONLY ONE of these:
 - non_biodegradable
 - hazardous
 
-DO NOT guess common objects like "mobile phone" unless it is VERY CLEAR.
+DO NOT guess common objects like "mobile phone" unless it is CLEAR.
 
 Rules:
 - biodegradable = food, paper, leaves, organic
