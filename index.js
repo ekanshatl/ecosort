@@ -32,7 +32,6 @@ biodegradable = natural materials.
 non_biodegradable = plastic, glass, metal.
 hazardous = ALL ELECTRONICS including mobile phones, batteries, cells, etc.
 
-If you see a human holding an item, dont classify the human, classify the item he is holding.
 Be accurate
 `;
 }
