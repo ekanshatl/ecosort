@@ -1,20 +1,27 @@
 import express from "express";
 import dotenv from "dotenv";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
 
-// raw JPEG input (same as your ESP)
+if (!GEMINI_API_KEY) {
+  console.error("❌ Missing GEMINI_API_KEY");
+  process.exit(1);
+}
+
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: MODEL });
+
+// ESP sends raw JPEG
 app.use(express.raw({ type: "image/jpeg", limit: "10mb" }));
 
-// 🔥 STRICT PROMPT (key to accuracy)
+// 🔥 STRICT PROMPT (very important)
 function buildPrompt() {
   return `
 You are a STRICT waste classification system.
@@ -25,13 +32,13 @@ Classify the object into ONLY ONE:
 - hazardous
 
 Rules:
-- biodegradable = food, paper, leaves
+- biodegradable = food, paper, leaves, organic
 - non_biodegradable = plastic, glass, metal
 - hazardous = electronics, batteries, wires
 
 IMPORTANT:
-- DO NOT guess common objects like "mobile phone"
-- If not clearly visible → return unknown
+- DO NOT guess random objects like "mobile phone"
+- If unsure → return unknown
 
 Return ONLY JSON:
 {"class":"biodegradable","object":"leaf"}
@@ -40,40 +47,33 @@ OR
 `;
 }
 
+// health check
 app.get("/", (req, res) => {
-  res.send("🌱 Ecosort (ChatGPT backend) is running!");
+  res.send("🌱 Ecosort Gemini backend running!");
 });
 
+// 🔍 analyze route
 app.post("/analyze", async (req, res) => {
   try {
     if (!req.body || !req.body.length) {
       return res.status(400).json({ error: "no image data" });
     }
 
-    const base64 = req.body.toString("base64");
     console.log(`🖼️ Received ${req.body.length} bytes`);
 
-    // 🧠 OpenAI Vision call
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini", // fast + good for vision
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: buildPrompt() },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${base64}`,
-              },
-            },
-          ],
-        },
-      ],
-      max_tokens: 100,
-    });
+    const base64 = req.body.toString("base64");
 
-    const text = response.choices[0].message.content;
+    const result = await model.generateContent([
+      buildPrompt(), // prompt FIRST (important)
+      {
+        inlineData: {
+          mimeType: "image/jpeg",
+          data: base64,
+        },
+      },
+    ]);
+
+    const text = result.response.text();
     console.log("🧠 Raw:", text);
 
     // 🔒 Safe JSON extraction
@@ -85,12 +85,12 @@ app.post("/analyze", async (req, res) => {
       json = null;
     }
 
-    // 🛑 Safety fallback
+    // 🛑 fallback
     if (!json || !json.class) {
       json = { class: "unknown", object: "unknown" };
     }
 
-    // 🚫 Anti-hallucination filter
+    // 🚫 anti-hallucination (extra safety)
     if (
       json.object &&
       json.object.toLowerCase().includes("phone")
@@ -99,14 +99,17 @@ app.post("/analyze", async (req, res) => {
       json = { class: "unknown", object: "unknown" };
     }
 
-    res.json({ ok: true, result: json });
+    res.json({
+      ok: true,
+      result: json,
+    });
 
   } catch (err) {
-    console.error("💥 Error:", err.message);
+    console.error("💥 Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.listen(PORT, () =>
-  console.log(`🚀 Server running on ${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on ${PORT}`);
+});
